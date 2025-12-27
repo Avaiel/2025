@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>2025 阅影志：白蝶与鲜花</title>
+    <style>
+        :root {
+            --bg-overlay: rgba(5, 10, 25, 0.75);
+            --accent-glow: #ffffff; 
+            --text-color: #f8f9fa;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        /* 隐藏鼠标原指针，使用蝴蝶跟随 */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; } 
+
+        body {
+            background-color: #050a19;
+            background-image: url('butterfly_bg.jpg'); 
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            color: var(--text-color);
+            font-family: "Source Han Serif SC", "SimSun", serif;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-overlay); z-index: -1;
+        }
+
+        /* 白色蝴蝶鼠标 */
+        #cursor-butterfly {
+            position: fixed; width: 24px; height: 24px; pointer-events: none; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s ease-out;
+        }
+        #cursor-butterfly::after {
+            content: '🦋'; font-size: 22px;
+            filter: brightness(2) drop-shadow(0 0 8px #fff);
+            animation: flap 0.25s infinite alternate;
+        }
+        @keyframes flap { from { transform: scaleX(1); } to { transform: scaleX(0.4); } }
+
+        /* 音乐播放器：白色鲜花 */
+        .music-player {
+            position: fixed; top: 25px; right: 25px; z-index: 1000;
+            cursor: pointer; display: flex; align-items: center; gap: 12px;
+            background: rgba(255, 255, 255, 0.1); padding: 8px 18px; border-radius: 40px;
+            border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+        .music-player:hover { border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        
+        .disc {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: url('https://img.icons8.com/ios-filled/100/ffffff/flower-dahlia.png') center/cover;
+            animation: rotate 5s linear infinite; animation-play-state: paused;
+            filter: drop-shadow(0 0 5px #fff);
+        }
+        .disc.playing { animation-play-state: running; }
+        .music-text { font-size: 12px; color: #fff; letter-spacing: 1px; font-weight: 300; }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        header {
+            height: 65vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        header h1 { 
+            font-size: 3.5rem; color: #fff; letter-spacing: 15px; margin-bottom: 20px; 
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+        }
+        header p { font-size: 1rem; opacity: 0.7; letter-spacing: 4px; font-style: italic; }
+
+        #ask-btn {
+            background: transparent; border: 1px solid #fff;
+            color: #fff; padding: 12px 35px; margin-top: 40px;
+            letter-spacing: 5px; border-radius: 50px; cursor: pointer;
+            transition: 0.4s; backdrop-filter: blur(5px);
+        }
+        #ask-btn:hover { background: #fff; color: #000; box-shadow: 0 0 30px #fff; }
+
+        /* 问答模块 */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 15, 0.95); z-index: 2000;
+            justify-content: center; align-items: center;
+        }
+        .modal-content { 
+            max-width: 600px; width: 90%; padding: 50px; text-align: center; 
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px); border-radius: 10px;
+        }
+        .nav-btn { background: transparent; border: 1px solid #555; color: #aaa; padding: 10px 25px; margin: 10px; cursor: pointer; transition: 0.3s; }
+        .nav-btn:hover { border-color: #fff; color: #fff; }
+
+        /* 容器与网格 */
+        .container { max-width: 1500px; margin: 0 auto; padding: 0 40px; }
+        .section-header { margin: 80px 0 30px; border-left: 3px solid #fff; padding-left: 20px; }
+        .section-header h2 { font-size: 1.6rem; letter-spacing: 3px; font-weight: 300; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            overflow: hidden; position: relative;
+        }
+        .card::before {
+            content: '🦋'; position: absolute; top: 8px; left: 8px;
+            z-index: 10; opacity: 0; transition: 0.4s;
+            filter: brightness(2) drop-shadow(0 0 5px #fff);
+        }
+        .card:hover { transform: translateY(-10px); border-color: #fff; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1); }
+        .card:hover::before { opacity: 1; transform: scale(1.1) rotate(-15deg); }
+
+        .poster {
+            width: 100%; aspect-ratio: 2/3; background: rgba(255,255,255,0.02);
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .poster img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; display: none; }
+        .poster.has-img img { display: block; filter: brightness(0.8); }
+        .card:hover img { filter: brightness(1); }
+        .poster-text { font-size: 0.8rem; color: #fff; opacity: 0.3; padding: 15px; text-align: center; }
+
+        .info { padding: 15px; min-height: 100px; background: rgba(0,0,0,0.4); display: flex; flex-direction: column; justify-content: flex-start; }
+        .info h3 { font-size: 0.9rem; color: #fff; font-weight: 400; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .quote { font-size: 0.72rem; color: #aaa; font-style: italic; line-height: 1.4; font-weight: 200; }
+
+        #file-input { display: none; }
+        footer { text-align: center; padding: 100px 0; opacity: 0.3; font-size: 0.7rem; letter-spacing: 4px; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            header h1 { font-size: 2.2rem; }
+            .container { padding: 0 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor-butterfly"></div>
+    <div class="overlay"></div>
+    <input type="file" id="file-input" accept="image/*">
+
+    <div class="music-player" onclick="toggleMusic()">
+        <span class="music-text">回春丹 · 鲜花</span>
+        <div class="disc" id="disc"></div>
+        <audio id="bgm" loop src="xianhua.mp3"></audio>
+    </div>
+
+    <header>
+        <div style="letter-spacing:10px; opacity:0.6; margin-bottom:15px; font-size:0.8rem;">THE BUTTERFLY EFFECT 2025</div>
+        <h1>阅 影 志</h1>
+        <p>“治愈那颗荒芜的心，让它开满鲜花。”</p>
+        <button id="ask-btn">开启深夜独白</button>
+    </header>
+
+    <div class="modal" id="q-modal">
+        <div class="modal-content">
+            <div id="question-text" style="min-height:150px; font-size:1.4rem; line-height:1.8; display:flex; align-items:center; justify-content:center;">...</div>
+            <div style="margin-top:50px;">
+                <button class="nav-btn" onclick="prevQ()">PREV</button>
+                <button class="nav-btn" onclick="nextQ()" style="border-color:#fff; color:#fff">NEXT</button>
+                <button class="nav-btn" onclick="closeQ()" style="color:#ff4d4d;">EXIT</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section-header"><h2>书籍 / BOOKS</h2></div>
+        <div class="grid" id="books-grid"></div>
+
+        <div class="section-header"><h2>影视 / VISION</h2></div>
+        <div class="grid" id="movies-grid"></div>
+    </div>
+
+    <footer><p>MOMENTS COLLECTED BY YOU | 2025 REVIEW</p></footer>
+
+    <script>
+        // 蝴蝶跟随
+        const cursor = document.getElementById('cursor-butterfly');
+        document.addEventListener('mousemove', e => {
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+        });
+
+        const questions = [
+            "今年有没有哪个时刻，你剥开了生活的假象，看清了某个残酷但必要的真相？",
+            "当感到疲惫或陷入“长夜”时，今年哪一份微小的“甜味”成了你的避风港？",
+            "在时代的洪流中，你今年是否坚守住了某种不可妥协的原则？",
+            "这一年里，你是否也曾戴上完美的面具？有哪些时刻你渴望卸下它？",
+            "如果能预知今年某个遗憾的结局，你真的会选择改变当初的路径吗？",
+            "谁是你今年生活里的“Central Perk”？谁对你说过“I'll be there for you”？",
+            "今年你是否放下了某种固有偏见，从而看见了一个更纯粹的灵魂？",
+            "在追求成功的间隙，你是否有过感到一切如梦幻泡影的瞬间？",
+            "生活往往不按剧本出牌，今年哪一个“大反转”让你学到了最深刻的一课？",
+            "回望一整年，是什么“浇灌”了你的内心，让它在岁末依然能开出鲜花？"
+        ];
+
+        const booksData = [
+            { title: "狮子之家的点心日", quote: "哪怕在生命的终点，也要记得品尝那一抹温柔的甜。" },
+            { title: "苦雨之地", quote: "在这片土地上，万物都在用自己的方式书写痛苦与奇迹。" },
+            { title: "长夜", quote: "长夜虽冷，但总有人在等一个迟到的黎明。" },
+            { title: "然后，化成海上的泡沫", quote: "所有的失去，终将在深海里得到和解。" },
+            { title: "满洲国艳妖川岛芳子", quote: "在时代的巨浪前，美丽与野心都不过是破碎的泡沫。" },
+            { title: "金色梦乡", quote: "人类最大的武器是习惯与信赖。" },
+            { title: "告白", quote: "听到那种生命崩塌的声音了吗？那是‘啪嗒’的一声。" },
+            { title: "圣母", quote: "为了保护最重要的东西，母亲可以变成任何人。" },
+            { title: "六小时后你会死", quote: "如果预知了结局，你是否有勇气改变走向终点的路径？" },
+            { title: "斯泰尔斯庄园奇案", quote: "波洛的灰细胞从不让真相缺席。" },
+            { title: "吸血之家", quote: "封闭的宅邸里，流传着永生的恐怖谎言。" },
+            { title: "丰饶之海", quote: "梦是可以相互交换的，而现实却是一场永恒的虚无。" },
+            { title: "鱼猎", quote: "在这场名为欲望的猎杀里，没有人是真正的局外人。" },
+            { title: "1367", quote: "无论时代如何改变，有些原则是不能妥协的。" },
+            { title: "油炸绿番茄", quote: "哪怕世界再糟糕，我们总能从友情中找到活下去的力量。" },
+            { title: "性盲症患者的爱情", quote: "如果看不见性别，我们是否能更纯粹地爱一个人的灵魂？" },
+            { title: "情迷翡冷翠", quote: "翡冷翠的阳光下，每一粒尘埃都闪烁着艺术的灵魂。" },
+            { title: "六个说谎的大学生", quote: "在这个面试间里，所有人都在展示完美的虚假。" },
+            { title: "西游八十一案：长安击壤歌", quote: "长安的繁华之下，埋藏着千年的局与孤独的心。" },
+            { title: "希腊棺材之谜", quote: "逻辑是唯一能穿透死亡迷雾的光。" }
+        ];
+
+        const moviesData = [
+            { title: "老友记", quote: "Welcome to the real world! It sucks. You’re gonna love it." },
+            { title: "扑克脸2", quote: "谎言是有气味的，而我正好有个敏锐的鼻子。" },
+            { title: "捕风追影", quote: "真相就在那风中，忽隐忽现。" },
+            { title: "阿凡达3", quote: "火与灰烬，万物灵性之间的连接永不消失。" },
+            { title: "控方证人", quote: "法律不仅是正义，有时也是一场最高明的表演。" },
+            { title: "混沌少年时", quote: "在崩塌的世界里，寻找成长的逻辑。" }
+        ];
+
+        let currentTargetId = null;
+        let currentQ = 0;
+
+        function init() {
+            renderGrid(booksData, 'books-grid', 'book');
+            renderGrid(moviesData, 'movies-grid', 'movie');
+        }
+
+        function renderGrid(data, gridId, type) {
+            const grid = document.getElementById(gridId);
+            data.forEach((item, index) => {
+                const storageKey = `2025_v4_img_${type}_${index}`;
+                const savedImg = localStorage.getItem(storageKey);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => triggerUpload(storageKey);
+                card.innerHTML = `
+                    <div class="poster ${savedImg ? 'has-img' : ''}" id="${storageKey}">
+                        <span class="poster-text">${item.title}</span>
+                        <img src="${savedImg || ''}">
+                    </div>
+                    <div class="info">
+                        <h3>${item.title}</h3>
+                        <p class="quote">“${item.quote}”</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        const fileInput = document.getElementById('file-input');
+        function triggerUpload(id) { currentTargetId = id; fileInput.click(); }
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    try {
+                        localStorage.setItem(currentTargetId, base64);
+                        const container = document.getElementById(currentTargetId);
+                        container.querySelector('img').src = base64;
+                        container.classList.add('has-img');
+                    } catch(err) { alert("存储空间已满，请压缩图片再上传。"); }
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        document.getElementById('ask-btn').onclick = () => { document.getElementById('q-modal').style.display = 'flex'; showQuestion(); };
+        function showQuestion() { document.getElementById('question-text').innerText = questions[currentQ]; }
+        function nextQ() { if(currentQ < questions.length-1) { currentQ++; showQuestion(); } }
+        function prevQ() { if(currentQ > 0) { currentQ--; showQuestion(); } }
+        function closeQ() { document.getElementById('q-modal').style.display = 'none'; }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bgm');
+            const disc = document.getElementById('disc');
+            if (audio.paused) {
+                audio.play().then(() => disc.classList.add('playing')).catch(err => alert("请确认 xianhua.mp3 已放在文件夹中"));
+            } else {
+                audio.pause();
+                disc.classList.remove('playing');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
